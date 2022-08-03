@@ -1,18 +1,30 @@
 package main
 
 import (
-	"fmt"
+	"io/ioutil"
 	"log"
-	"os"
-
-	"github.com/joho/godotenv"
+	"net/http"
 )
 
 func main() {
-	err := godotenv.Load(".env")
+
+	makeGetRequest("https://jsonplaceholder.typicode.com/todos/1")
+}
+
+func makeGetRequest(url string) string {
+	resp, err := http.Get(url)
 
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatalln(err)
 	}
-	fmt.Println(os.Getenv("INFO_FOOTTRAFFIK_OAUTH2_CLIENT_AUTH_PROVIDER"))
+
+	body, err := ioutil.ReadAll(resp.Body)
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	sb := string(body)
+
+	return sb
 }
