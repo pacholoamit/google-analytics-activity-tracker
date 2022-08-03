@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/http"
 
+	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/browser"
 	"github.com/spf13/viper"
 	"golang.org/x/oauth2"
@@ -17,22 +19,28 @@ func main() {
 	viper.SetConfigType("json")
 	viper.AddConfigPath(".")
 
-	fmt.Println("Enter you Client Id: ")
-	var clientId string
-	fmt.Scanln(&clientId)
-	viper.Set("client_id", clientId)
+	if err := viper.ReadInConfig(); err != nil {
+		fmt.Println("Enter you Client Id: ")
+		var clientId string
+		fmt.Scanln(&clientId)
+		viper.Set("client_id", clientId)
 
-	fmt.Println("Enter you Client Secret: ")
-	var clientSecret string
-	fmt.Scanln(&clientSecret)
-	viper.Set("client_secret", clientSecret)
+		fmt.Println("Enter you Client Secret: ")
+		var clientSecret string
+		fmt.Scanln(&clientSecret)
+		viper.Set("client_secret", clientSecret)
 
-	fmt.Println("Enter you Redirect URL: ")
-	var redirectURL string
-	fmt.Scanln(&redirectURL)
-	viper.Set("redirect_url", redirectURL)
+		fmt.Println("Enter you Redirect URL: ")
+		var redirectURL string
+		fmt.Scanln(&redirectURL)
+		viper.Set("redirect_url", redirectURL)
 
-	viper.SafeWriteConfig()
+		viper.SafeWriteConfig()
+	}
+
+	clientId := viper.GetString("client_id")
+	clientSecret := viper.GetString("client_secret")
+	redirectURL := viper.GetString("redirect_url")
 
 	conf := &oauth2.Config{
 		ClientID:     clientId,
@@ -50,13 +58,35 @@ func main() {
 
 	browser.OpenURL(url)
 
-	token, err := conf.Exchange(context.Background(), "authorization-code")
+}
+
+type config struct {
+	clientId     string
+	clientSecret string
+	redirectURL  string
+}
+
+type application struct {
+	config config
+	oauth  *oauth2.Config
+}
+
+func (app *application) routes() *httprouter.Router {
+	router := httprouter.New()
+
+	router.HandlerFunc(http.MethodGet, "/success", app.successHandler)
+	return router
+}
+
+func (app *application) successHandler(w http.ResponseWriter, r *http.Request) {
+
+	token, err := app.oauth.Exchange(context.Background(), "authorization-code")
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	client := conf.Client(context.Background(), token)
+	client := app.oauth.Client(context.Background(), token)
 
 	resp, err := client.Get("https://www.googleapis.com/analytics/v3/management/accounts")
 
@@ -73,5 +103,4 @@ func main() {
 	sb := string(body)
 
 	log.Print(sb)
-
 }
