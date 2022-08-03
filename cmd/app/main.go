@@ -1,11 +1,11 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"io/ioutil"
 	"log"
-	"net/http"
 
+	"github.com/pkg/browser"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
@@ -25,12 +25,17 @@ func main() {
 	}
 
 	url := conf.AuthCodeURL("state", oauth2.AccessTypeOffline) // For inclusing of refresh token
-	fmt.Printf("Visit the URL for the auth dialog: %v\n", url)
+	browser.OpenURL(url)
 
-}
+	token, err := conf.Exchange(context.Background(), "authorization-code")
 
-func makeGetRequest(url string) string {
-	resp, err := http.Get(url)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	client := conf.Client(context.Background(), token)
+
+	resp, err := client.Get("https://www.googleapis.com/analytics/v3/management/accounts")
 
 	if err != nil {
 		log.Fatalln(err)
@@ -44,5 +49,6 @@ func makeGetRequest(url string) string {
 
 	sb := string(body)
 
-	return sb
+	log.Print(sb)
+
 }
