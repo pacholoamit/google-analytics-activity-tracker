@@ -45,23 +45,21 @@ func main() {
 		logger: logger,
 	}
 
+	srv := &http.Server{
+		Addr:         fmt.Sprintf(":%d", 3000),
+		Handler:      app.routes(),
+		IdleTimeout:  time.Minute,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 30 * time.Second,
+	}
+	logger.Printf("starting server on %s", srv.Addr)
 	go func() {
-		srv := &http.Server{
-			Addr:         fmt.Sprintf(":%d", 3000),
-			Handler:      app.routes(),
-			IdleTimeout:  time.Minute,
-			ReadTimeout:  10 * time.Second,
-			WriteTimeout: 30 * time.Second,
-		}
-		logger.Printf("starting server on %s", srv.Addr)
 		err := srv.ListenAndServe()
 		logger.Fatal(err)
 	}()
-	go func() {
-		url := app.oauth.AuthCodeURL("state") // For inclusing of refresh token
 
-		browser.OpenURL(url)
-	}()
+	url := app.oauth.AuthCodeURL("state") // For inclusing of refresh token
+	browser.OpenURL(url)
 
 }
 
@@ -118,14 +116,15 @@ func createOAuthConfig(c config) *oauth2.Config {
 
 func (app *application) routes() *httprouter.Router {
 	router := httprouter.New()
-
 	router.HandlerFunc(http.MethodGet, "/success", app.successHandler)
 	return router
 }
 
 func (app *application) successHandler(w http.ResponseWriter, r *http.Request) {
+	code := r.URL.Query().Get("code")
 
-	token, err := app.oauth.Exchange(context.Background(), "authorization-code")
+	fmt.Print("Code: ", code)
+	token, err := app.oauth.Exchange(context.Background(), code)
 
 	if err != nil {
 		log.Fatal(err)
