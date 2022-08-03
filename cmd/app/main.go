@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -22,6 +23,10 @@ func main() {
 		},
 		Endpoint: google.Endpoint,
 	}
+
+	url := conf.AuthCodeURL("state", oauth2.AccessTypeOffline) // For inclusing of refresh token
+	fmt.Printf("Visit the URL for the auth dialog: %v\n", url)
+
 }
 
 func makeGetRequest(url string) string {
