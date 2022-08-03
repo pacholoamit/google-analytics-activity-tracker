@@ -8,13 +8,22 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/pkg/browser"
 	"github.com/spf13/viper"
 	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
 )
 
-func main() {
+type config struct {
+	clientId     string
+	clientSecret string
+	redirectURL  string
+}
+
+type application struct {
+	config config
+	oauth  *oauth2.Config
+}
+
+func (c *config) setupConfig() {
 	viper.SetConfigName("config")
 	viper.SetConfigType("json")
 	viper.AddConfigPath(".")
@@ -42,33 +51,33 @@ func main() {
 	clientSecret := viper.GetString("client_secret")
 	redirectURL := viper.GetString("redirect_url")
 
-	conf := &oauth2.Config{
-		ClientID:     clientId,
-		ClientSecret: clientSecret,
-		RedirectURL:  redirectURL,
-		Scopes: []string{
-			"https://www.googleapis.com/auth/business.manage",
-			"https://www.googleapis.com/auth/analytics.readonly",
-			"https://www.googleapis.com/auth/adwords",
-		},
-		Endpoint: google.Endpoint,
-	}
-
-	url := conf.AuthCodeURL("state") // For inclusing of refresh token
-
-	browser.OpenURL(url)
-
+	c.clientId = clientId
+	c.clientSecret = clientSecret
+	c.redirectURL = redirectURL
 }
 
-type config struct {
-	clientId     string
-	clientSecret string
-	redirectURL  string
-}
+func main() {
+	var c config
 
-type application struct {
-	config config
-	oauth  *oauth2.Config
+	c.setupConfig()
+
+	fmt.Println(c.clientId)
+
+	// conf := &oauth2.Config{
+	// 	ClientID:     clientId,
+	// 	ClientSecret: clientSecret,
+	// 	RedirectURL:  redirectURL,
+	// 	Scopes: []string{
+	// 		"https://www.googleapis.com/auth/business.manage",
+	// 		"https://www.googleapis.com/auth/analytics.readonly",
+	// 		"https://www.googleapis.com/auth/adwords",
+	// 	},
+	// 	Endpoint: google.Endpoint,
+	// }
+
+	// url := conf.AuthCodeURL("state") // For inclusing of refresh token
+
+	// browser.OpenURL(url)
 }
 
 func (app *application) routes() *httprouter.Router {
