@@ -2,46 +2,32 @@ package main
 
 import (
 	"bufio"
-	"context"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/julienschmidt/httprouter"
+	"github.com/pacholoamit/google-analytics-activity-monitor/internal/app"
 	"github.com/pacholoamit/google-analytics-activity-monitor/internal/config"
-	"github.com/pkg/browser"
 	"github.com/spf13/viper"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
 
-type application struct {
-	config *config.Config
-	oauth  *oauth2.Config
-	logger *log.Logger
-}
-
 func main() {
-
 	conf := setupConfig()
 
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
 	oauth := createOAuthConfig(conf)
 
-	app := &application{
-		config: conf,
-		oauth:  oauth,
-		logger: logger,
-	}
+	app := app.New(conf, oauth, logger)
 
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%d", 3000),
-		Handler:      app.routes(),
+		Handler:      app.Routes(),
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
@@ -51,10 +37,7 @@ func main() {
 		err := srv.ListenAndServe()
 		logger.Fatal(err)
 	}()
-
-	url := app.oauth.AuthCodeURL("state") // For inclusing of refresh token
-	browser.OpenURL(url)
-
+	app.GoogleAuthenticate()
 }
 
 func setupConfig() *config.Config {
@@ -105,39 +88,4 @@ func createOAuthConfig(c *config.Config) *oauth2.Config {
 	}
 
 	return oauth
-}
-
-func (app *application) routes() *httprouter.Router {
-	router := httprouter.New()
-	router.HandlerFunc(http.MethodGet, "/success", app.successHandler)
-	return router
-}
-
-func (app *application) successHandler(w http.ResponseWriter, r *http.Request) {
-	code := r.URL.Query().Get("code")
-
-	fmt.Print("Code: ", code)
-	token, err := app.oauth.Exchange(context.Background(), code)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	client := app.oauth.Client(context.Background(), token)
-
-	resp, err := client.Get("https://www.googleapis.com/analytics/v3/management/accounts")
-
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	sb := string(body)
-
-	log.Print(sb)
 }
