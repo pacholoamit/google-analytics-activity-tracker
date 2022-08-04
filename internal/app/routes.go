@@ -1,8 +1,6 @@
 package app
 
 import (
-	"context"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -19,14 +17,7 @@ func (app *Application) Routes() *httprouter.Router {
 func (app *Application) successHandler(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Query().Get("code")
 
-	fmt.Print("Code: ", code)
-	token, err := app.oauth.Exchange(context.Background(), code)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	client := app.oauth.Client(context.Background(), token)
+	client := app.newGoogleClient(code)
 
 	resp, err := client.Get("https://www.googleapis.com/analytics/v3/management/accounts")
 
