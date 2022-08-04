@@ -12,35 +12,29 @@ import (
 	"time"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/pacholoamit/google-analytics-activity-monitor/internal/config"
 	"github.com/pkg/browser"
 	"github.com/spf13/viper"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
 
-type config struct {
-	clientId     string
-	clientSecret string
-	redirectURL  string
-}
-
 type application struct {
-	config config
+	config *config.Config
 	oauth  *oauth2.Config
 	logger *log.Logger
 }
 
 func main() {
-	var cfg config
 
-	cfg.setupConfig()
+	conf := setupConfig()
 
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
-	oauth := createOAuthConfig(cfg)
+	oauth := createOAuthConfig(conf)
 
 	app := &application{
-		config: cfg,
+		config: conf,
 		oauth:  oauth,
 		logger: logger,
 	}
@@ -63,7 +57,7 @@ func main() {
 
 }
 
-func (c *config) setupConfig() {
+func setupConfig() *config.Config {
 	viper.SetConfigName("config")
 	viper.SetConfigType("json")
 	viper.AddConfigPath(".")
@@ -93,16 +87,15 @@ func (c *config) setupConfig() {
 	clientSecret := viper.GetString("client_secret")
 	redirectURL := viper.GetString("redirect_url")
 
-	c.clientId = clientId
-	c.clientSecret = clientSecret
-	c.redirectURL = redirectURL
+	conf := config.New(clientId, clientSecret, redirectURL)
+	return conf
 }
 
-func createOAuthConfig(c config) *oauth2.Config {
+func createOAuthConfig(c *config.Config) *oauth2.Config {
 	oauth := &oauth2.Config{
-		ClientID:     c.clientId,
-		ClientSecret: c.clientSecret,
-		RedirectURL:  c.redirectURL,
+		ClientID:     c.GetClientId(),
+		ClientSecret: c.GetClientSecret(),
+		RedirectURL:  c.GetRedirectURL(),
 		Scopes: []string{
 			"https://www.googleapis.com/auth/business.manage",
 			"https://www.googleapis.com/auth/analytics.readonly",
