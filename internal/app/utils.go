@@ -11,8 +11,7 @@ func (app *Application) GoogleAuthenticate() {
 	fmt.Printf("Visit the URL for the auth dialog: %v", url)
 }
 
-func (app *Application) newGoogleClient() *http.Client {
-	code := app.config.GetCode()
+func (app *Application) newGoogleClient(code string) *http.Client {
 	token, err := app.oauth.Exchange(context.Background(), code)
 	if err != nil {
 		app.logger.Fatal(err)

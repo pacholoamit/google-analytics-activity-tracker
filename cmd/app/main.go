@@ -29,12 +29,11 @@ func main() {
 		WriteTimeout: 30 * time.Second,
 	}
 
-	go func() {
-		logger.Printf("starting server on %s", srv.Addr)
-		err := srv.ListenAndServe()
-		logger.Fatal(err)
-	}()
 	app.GoogleAuthenticate()
+
+	logger.Printf("starting server on %s", srv.Addr)
+	err := srv.ListenAndServe()
+	logger.Fatal(err)
 
 }
 

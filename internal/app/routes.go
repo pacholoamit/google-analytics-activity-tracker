@@ -1,6 +1,7 @@
 package app
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sync"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -20,12 +22,16 @@ func (app *Application) Routes() *httprouter.Router {
 
 func (app *Application) successHandler(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Query().Get("code")
-	app.config.SetCode(code)
 
 	app.logger.Println("Code successfully requested:", code)
-	client := app.newGoogleClient()
+
+	client := app.newGoogleClient(code)
 
 	accounts := app.ListAccounts(client)
+
+	for _, account := range accounts {
+		fmt.Println(account.Name)
+	}
 
 	app.GetChangeHistory(accounts, client)
 }
@@ -65,17 +71,25 @@ func (app *Application) ListAccounts(c *http.Client) []accountModel {
 }
 
 func (app *Application) GetChangeHistory(acc []accountModel, c *http.Client) {
-	f, err := os.Create("changeHistory")
+	fmt.Println("Getting change history for accounts:")
+	f, err := os.OpenFile("change_history", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+
 	if err != nil {
-		app.logger.Fatal(err)
+		app.logger.Fatalf("Failed creating a file: %s", err)
 	}
+	w := bufio.NewWriter(f)
+
+	var wg sync.WaitGroup
+
+	wg.Add(len(acc))
+
 	for _, account := range acc {
 		go func(account accountModel) {
+
 			url := fmt.Sprintf("https://analyticsadmin.googleapis.com/v1beta/%s:searchChangeHistoryEvents", account.Name)
 
 			postBody := []byte(`{
   "earliestChangeTime": "2014-10-02T15:01:23Z",
-  "property": "properties/250119597",
   "pageSize": 1000,
   "resourceType": [
     "ACCOUNT",
@@ -99,6 +113,8 @@ func (app *Application) GetChangeHistory(acc []accountModel, c *http.Client) {
 
 			body, err := ioutil.ReadAll(resp.Body)
 
+			fmt.Println(string(body))
+
 			if err != nil {
 				app.logger.Fatalln(err)
 			}
@@ -110,11 +126,20 @@ func (app *Application) GetChangeHistory(acc []accountModel, c *http.Client) {
 			if result["error"] != nil {
 				return
 			}
-			fmt.Print(account.Name, ": ", len(result["changeHistoryEvents"].([]interface{})))
-			f.WriteString(fmt.Sprintf("%s\n", account.Name))
 
+			fmt.Println("Account: ", account.Name)
+
+			b, err := w.WriteString(string(body))
+
+			if err != nil {
+				app.logger.Fatalln("Error writing to a file:", err)
+			}
+
+			fmt.Println("Bytes written: ", b)
+			wg.Done()
 		}(account)
 
 	}
-
+	// defer w.Flush()
+	// defer f.Close()
 }
