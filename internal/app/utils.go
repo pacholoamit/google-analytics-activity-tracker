@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/pkg/browser"
@@ -15,7 +14,6 @@ func (app *Application) GoogleAuthenticate() {
 
 func (app *Application) newGoogleClient() *http.Client {
 	code := app.config.GetCode()
-	fmt.Println(code)
 	token, err := app.oauth.Exchange(context.Background(), code)
 	if err != nil {
 		app.logger.Fatal(err)

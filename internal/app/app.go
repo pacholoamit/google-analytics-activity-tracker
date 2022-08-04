@@ -1,7 +1,6 @@
 package app
 
 import (
-	"io/ioutil"
 	"log"
 
 	"golang.org/x/oauth2"
@@ -39,24 +38,4 @@ func New(cfg config, logger *log.Logger) *Application {
 		oauth:  oauth,
 		logger: logger,
 	}
-}
-
-func (app *Application) ListAccounts() {
-	client := app.newGoogleClient()
-
-	resp, err := client.Get("https://analyticsadmin.googleapis.com/v1alpha/accounts")
-
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	sb := string(body)
-
-	log.Print(sb)
 }

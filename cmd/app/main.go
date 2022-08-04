@@ -35,7 +35,6 @@ func main() {
 		logger.Fatal(err)
 	}()
 	app.GoogleAuthenticate()
-	app.ListAccounts()
 
 }
 
