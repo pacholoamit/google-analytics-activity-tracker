@@ -124,23 +124,21 @@ func (app *Application) GetChangeHistory(acc []accountModel, c *http.Client) {
 			json.Unmarshal([]byte(body), &result)
 
 			if result["error"] != nil {
+				wg.Done()
 				return
 			}
 
-			fmt.Println("Account: ", account.Name)
-
-			b, err := w.WriteString(string(body))
+			_, err = w.WriteString(string(body))
 
 			if err != nil {
 				app.logger.Fatalln("Error writing to a file:", err)
 			}
-
-			fmt.Println("Bytes written: ", b)
-
+			wg.Done()
 		}(account)
-		wg.Done()
+
 	}
 	wg.Wait()
 	w.Flush()
 	f.Close()
+	os.Exit(0)
 }
