@@ -43,3 +43,7 @@ func (app *Application) GoogleAuthenticate() {
 	url := app.oauth.AuthCodeURL("state") // For inclusing of refresh token
 	browser.OpenURL(url)
 }
+
+// func (app *Application) ListAccounts() {
+// 	app.
+// }

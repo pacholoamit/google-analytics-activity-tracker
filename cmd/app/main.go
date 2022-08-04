@@ -33,7 +33,13 @@ func main() {
 		err := srv.ListenAndServe()
 		logger.Fatal(err)
 	}()
-	app.GoogleAuthenticate()
+
+	code := viper.GetString("code")
+
+	if code == "" {
+		app.GoogleAuthenticate()
+	}
+
 }
 
 func setupConfig() *config.Config {

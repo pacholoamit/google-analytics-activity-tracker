@@ -1,11 +1,10 @@
 package app
 
 import (
-	"io/ioutil"
-	"log"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/spf13/viper"
 )
 
 func (app *Application) Routes() *httprouter.Router {
@@ -16,22 +15,33 @@ func (app *Application) Routes() *httprouter.Router {
 
 func (app *Application) successHandler(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Query().Get("code")
+	prevConfig := viper.AllSettings()
 
-	client := app.newGoogleClient(code)
-
-	resp, err := client.Get("https://www.googleapis.com/analytics/v3/management/accounts")
+	for k, v := range prevConfig {
+		viper.Set(k, v)
+	}
+	viper.Set("code", code)
+	err := viper.WriteConfig()
 
 	if err != nil {
-		log.Fatalln(err)
+		app.logger.Printf("Error writing config: %s", err)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	// client := app.newGoogleClient(code)
 
-	if err != nil {
-		log.Fatalln(err)
-	}
+	// resp, err := client.Get("https://analyticsadmin.googleapis.com/v1alpha/accounts")
 
-	sb := string(body)
+	// if err != nil {
+	// 	log.Fatalln(err)
+	// }
 
-	log.Print(sb)
+	// body, err := ioutil.ReadAll(resp.Body)
+
+	// if err != nil {
+	// 	log.Fatalln(err)
+	// }
+
+	// sb := string(body)
+
+	// log.Print(sb)
 }
