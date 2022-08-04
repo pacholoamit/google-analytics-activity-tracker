@@ -94,13 +94,13 @@ func (app *Application) GetChangeHistory(acc []accountModel, c *http.Client) {
 		go func(account accountModel) {
 			url := fmt.Sprintf("https://analyticsadmin.googleapis.com/v1beta/%s:searchChangeHistoryEvents", account.Name)
 
-			type changeHistoryEventsRequest struct {
+			type ChangeHistoryEventsRequest struct {
 				EarliestChangeTime string   `json:"earliestChangeTime"`
 				PageSize           int      `json:"pageSize"`
 				ResourceType       []string `json:"resourceType"`
 			}
 
-			postBody := &changeHistoryEventsRequest{
+			postBody := &ChangeHistoryEventsRequest{
 				EarliestChangeTime: "2022-07-01T00:00:00.000Z",
 				PageSize:           100,
 				ResourceType: []string{
