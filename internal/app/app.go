@@ -29,6 +29,7 @@ func New(cfg config, logger *log.Logger) *Application {
 		Scopes: []string{
 			"https://www.googleapis.com/auth/business.manage",
 			"https://www.googleapis.com/auth/analytics.readonly",
+			"https://www.googleapis.com/auth/analytics",
 			"https://www.googleapis.com/auth/adwords",
 		},
 		Endpoint: google.Endpoint,

@@ -1,9 +1,14 @@
 package app
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -17,11 +22,18 @@ func (app *Application) Routes() *httprouter.Router {
 func (app *Application) successHandler(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Query().Get("code")
 	app.config.SetCode(code)
+
 	app.logger.Println("Code successfully requested:", code)
-	app.ListAccounts()
+	client := app.newGoogleClient()
+
+	accounts := app.ListAccounts(client)
+
+	fmt.Print("Accounts: ", len(accounts))
+
+	app.GetChangeHistory(accounts, client)
 }
 
-type account struct {
+type accountModel struct {
 	Name        string `json:"name"`
 	DisplayName string `json:"displayName"`
 	CreateTime  string `json:"createTime"`
@@ -29,19 +41,16 @@ type account struct {
 	RegionCode  string `json:"regionCode"`
 }
 
-func (app *Application) ListAccounts() {
-	client := app.newGoogleClient()
+func (app *Application) ListAccounts(c *http.Client) []accountModel {
 
-	resp, err := client.Get("https://analyticsadmin.googleapis.com/v1alpha/accounts/?pageSize=200")
+	resp, err := c.Get("https://analyticsadmin.googleapis.com/v1beta/accounts/?pageSize=200")
 
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	defer resp.Body.Close()
-
 	var responseJSON struct {
-		Accounts []account `json:"accounts"`
+		Accounts []accountModel `json:"accounts"`
 	}
 
 	err = json.NewDecoder(resp.Body).Decode(&responseJSON)
@@ -50,17 +59,72 @@ func (app *Application) ListAccounts() {
 		panic(err)
 	}
 
-	for _, account := range responseJSON.Accounts {
+	var accountsArray []accountModel
 
-		log.Println(account.Name)
+	accountsList := append(accountsArray, responseJSON.Accounts...)
+
+	return accountsList
+
+}
+
+func (app *Application) GetChangeHistory(acc []accountModel, c *http.Client) error {
+
+	file, err := os.Create("change_history.json")
+
+	w := bufio.NewWriter(file)
+
+	if err != nil {
+		app.logger.Fatalln(err)
 	}
-	// body, err := ioutil.ReadAll(resp.Body)
 
-	// if err != nil {
-	// 	log.Fatalln(err)
-	// }
+	defer file.Close()
 
-	// sb := string(body)
+	for _, account := range acc {
+		go func(account accountModel) {
+			fmt.Print("processing account: ", account.Name)
+			url := fmt.Sprintf("https://analyticsadmin.googleapis.com/v1beta/%s:searchChangeHistoryEvents", account.Name)
 
-	// log.Print(sb)
+			postBody := []byte(`{
+  "earliestChangeTime": "2014-10-02T15:01:23Z",
+  "property": "properties/250119597",
+  "pageSize": 1000,
+  "resourceType": [
+    "ACCOUNT",
+    "PROPERTY",
+    "GOOGLE_ADS_LINK",
+    "GOOGLE_SIGNALS_SETTINGS",
+    "CONVERSION_EVENT",
+    "MEASUREMENT_PROTOCOL_SECRET",
+    "DATA_RETENTION_SETTINGS",
+    "DISPLAY_VIDEO_360_ADVERTISER_LINK",
+    "DISPLAY_VIDEO_360_ADVERTISER_LINK_PROPOSAL",
+    "DATA_STREAM",
+    "ATTRIBUTION_SETTINGS"
+  ]
+}`)
+			resp, err := c.Post(url, "application/json", bytes.NewBuffer(postBody))
+
+			if err != nil {
+				app.logger.Fatalln(err)
+			}
+
+			body, err := ioutil.ReadAll(resp.Body)
+
+			if err != nil {
+				app.logger.Fatalln(err)
+			}
+
+			var result map[string]interface{}
+
+			json.Unmarshal([]byte(body), &result)
+
+			if result["error"] != nil {
+				app.logger.Println("SOME ERROR")
+			}
+
+			// fmt.Print(result)
+			// fmt.Fprintln(w, result)
+		}(account)
+	}
+	return w.Flush()
 }
