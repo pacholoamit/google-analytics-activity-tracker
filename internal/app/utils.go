@@ -2,14 +2,13 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"net/http"
-
-	"github.com/pkg/browser"
 )
 
 func (app *Application) GoogleAuthenticate() {
 	url := app.oauth.AuthCodeURL("state") // For inclusing of refresh token
-	browser.OpenURL(url)
+	fmt.Printf("Visit the URL for the auth dialog: %v", url)
 }
 
 func (app *Application) newGoogleClient() *http.Client {

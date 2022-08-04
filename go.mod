@@ -4,7 +4,6 @@ go 1.19
 
 require (
 	github.com/julienschmidt/httprouter v1.3.0
-	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/spf13/viper v1.12.0
 	golang.org/x/oauth2 v0.0.0-20220722155238-128564f6959c
 )
