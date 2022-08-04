@@ -1,9 +1,9 @@
 package app
 
 import (
+	"io/ioutil"
 	"log"
 
-	"github.com/pkg/browser"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
@@ -18,6 +18,8 @@ type config interface {
 	GetClientId() string
 	GetClientSecret() string
 	GetRedirectURL() string
+	GetCode() string
+	SetCode(code string)
 }
 
 func New(cfg config, logger *log.Logger) *Application {
@@ -39,11 +41,22 @@ func New(cfg config, logger *log.Logger) *Application {
 	}
 }
 
-func (app *Application) GoogleAuthenticate() {
-	url := app.oauth.AuthCodeURL("state") // For inclusing of refresh token
-	browser.OpenURL(url)
-}
+func (app *Application) ListAccounts() {
+	client := app.newGoogleClient()
 
-// func (app *Application) ListAccounts() {
-// 	app.
-// }
+	resp, err := client.Get("https://analyticsadmin.googleapis.com/v1alpha/accounts")
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	sb := string(body)
+
+	log.Print(sb)
+}

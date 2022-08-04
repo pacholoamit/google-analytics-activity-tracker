@@ -28,17 +28,14 @@ func main() {
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 	}
+
 	go func() {
 		logger.Printf("starting server on %s", srv.Addr)
 		err := srv.ListenAndServe()
 		logger.Fatal(err)
 	}()
-
-	code := viper.GetString("code")
-
-	if code == "" {
-		app.GoogleAuthenticate()
-	}
+	app.GoogleAuthenticate()
+	app.ListAccounts()
 
 }
 
