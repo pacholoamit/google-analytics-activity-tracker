@@ -102,7 +102,7 @@ func (app *Application) GetChangeHistory(acc []accountModel, c *http.Client) {
 
 			postBody := &ChangeHistoryEventsRequest{
 				EarliestChangeTime: "2022-07-01T00:00:00.000Z",
-				PageSize:           100,
+				PageSize:           1000,
 				ResourceType: []string{
 					"ACCOUNT",
 					"PROPERTY",
