@@ -71,7 +71,7 @@ func (app *Application) ListAccounts(c *http.Client) []accountModel {
 }
 
 func (app *Application) GetChangeHistory(acc []accountModel, c *http.Client) {
-	fmt.Println("Getting change history for accounts:")
+
 	f, err := os.OpenFile("change_history", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 
 	if err != nil {
@@ -136,10 +136,11 @@ func (app *Application) GetChangeHistory(acc []accountModel, c *http.Client) {
 			}
 
 			fmt.Println("Bytes written: ", b)
-			wg.Done()
-		}(account)
 
+		}(account)
+		wg.Done()
 	}
-	// defer w.Flush()
-	// defer f.Close()
+	wg.Wait()
+	w.Flush()
+	f.Close()
 }
