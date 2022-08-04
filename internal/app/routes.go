@@ -1,7 +1,6 @@
 package app
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -27,8 +26,6 @@ func (app *Application) successHandler(w http.ResponseWriter, r *http.Request) {
 	client := app.newGoogleClient()
 
 	accounts := app.ListAccounts(client)
-
-	fmt.Print("Accounts: ", len(accounts))
 
 	app.GetChangeHistory(accounts, client)
 }
@@ -67,21 +64,13 @@ func (app *Application) ListAccounts(c *http.Client) []accountModel {
 
 }
 
-func (app *Application) GetChangeHistory(acc []accountModel, c *http.Client) error {
-
-	file, err := os.Create("change_history.json")
-
-	w := bufio.NewWriter(file)
-
+func (app *Application) GetChangeHistory(acc []accountModel, c *http.Client) {
+	f, err := os.Create("changeHistory")
 	if err != nil {
-		app.logger.Fatalln(err)
+		app.logger.Fatal(err)
 	}
-
-	defer file.Close()
-
 	for _, account := range acc {
 		go func(account accountModel) {
-			fmt.Print("processing account: ", account.Name)
 			url := fmt.Sprintf("https://analyticsadmin.googleapis.com/v1beta/%s:searchChangeHistoryEvents", account.Name)
 
 			postBody := []byte(`{
@@ -119,12 +108,13 @@ func (app *Application) GetChangeHistory(acc []accountModel, c *http.Client) err
 			json.Unmarshal([]byte(body), &result)
 
 			if result["error"] != nil {
-				app.logger.Println("SOME ERROR")
+				return
 			}
+			fmt.Print(account.Name, ": ", len(result["changeHistoryEvents"].([]interface{})))
+			f.WriteString(fmt.Sprintf("%s\n", account.Name))
 
-			// fmt.Print(result)
-			// fmt.Fprintln(w, result)
 		}(account)
+
 	}
-	return w.Flush()
+
 }
