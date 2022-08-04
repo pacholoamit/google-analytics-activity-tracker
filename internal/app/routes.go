@@ -14,6 +14,25 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+type accountModel struct {
+	Name        string `json:"name"`
+	DisplayName string `json:"displayName"`
+	CreateTime  string `json:"createTime"`
+	UpdateTime  string `json:"updateTime"`
+	RegionCode  string `json:"regionCode"`
+}
+
+type changeHistoryEventModel struct {
+	ChangeTime      string `json:"changeTime"`
+	ActorType       string `json:"actorType"`
+	UserActorEmail  string `json:"userActorEmail"`
+	ChangesFiltered bool   `json:"changesFiltered"`
+	Changes         []struct {
+		Resource string `json:"resource"`
+		Action   string `json:"action"`
+	}
+}
+
 func (app *Application) Routes() *httprouter.Router {
 	router := httprouter.New()
 	router.HandlerFunc(http.MethodGet, "/success", app.successHandler)
@@ -34,14 +53,6 @@ func (app *Application) successHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	app.GetChangeHistory(accounts, client)
-}
-
-type accountModel struct {
-	Name        string `json:"name"`
-	DisplayName string `json:"displayName"`
-	CreateTime  string `json:"createTime"`
-	UpdateTime  string `json:"updateTime"`
-	RegionCode  string `json:"regionCode"`
 }
 
 func (app *Application) ListAccounts(c *http.Client) []accountModel {
@@ -71,12 +82,12 @@ func (app *Application) ListAccounts(c *http.Client) []accountModel {
 }
 
 func (app *Application) GetChangeHistory(acc []accountModel, c *http.Client) {
-
 	f, err := os.OpenFile("change_history", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 
 	if err != nil {
 		app.logger.Fatalf("Failed creating a file: %s", err)
 	}
+
 	w := bufio.NewWriter(f)
 
 	var wg sync.WaitGroup
@@ -85,7 +96,6 @@ func (app *Application) GetChangeHistory(acc []accountModel, c *http.Client) {
 
 	for _, account := range acc {
 		go func(account accountModel) {
-
 			url := fmt.Sprintf("https://analyticsadmin.googleapis.com/v1beta/%s:searchChangeHistoryEvents", account.Name)
 
 			postBody := []byte(`{
