@@ -14,7 +14,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-type accountModel struct {
+type AccountModel struct {
 	Name        string `json:"name"`
 	DisplayName string `json:"displayName"`
 	CreateTime  string `json:"createTime"`
@@ -22,7 +22,13 @@ type accountModel struct {
 	RegionCode  string `json:"regionCode"`
 }
 
-type changeHistoryEventModel struct {
+type ChangeHistoryEventsRequest struct {
+	EarliestChangeTime string   `json:"earliestChangeTime"`
+	PageSize           int      `json:"pageSize"`
+	ResourceType       []string `json:"resourceType"`
+}
+
+type ChangeHistoryEventModel struct {
 	ChangeTime      string `json:"changeTime"`
 	ActorType       string `json:"actorType"`
 	UserActorEmail  string `json:"userActorEmail"`
@@ -51,7 +57,7 @@ func (app *Application) successHandler(w http.ResponseWriter, r *http.Request) {
 	app.GetChangeHistory(accounts, client)
 }
 
-func (app *Application) ListAccounts(c *http.Client) []accountModel {
+func (app *Application) ListAccounts(c *http.Client) []AccountModel {
 
 	res, err := c.Get("https://analyticsadmin.googleapis.com/v1beta/accounts/?pageSize=200")
 
@@ -77,7 +83,7 @@ func (app *Application) ListAccounts(c *http.Client) []accountModel {
 
 }
 
-func (app *Application) GetChangeHistory(acc []accountModel, c *http.Client) {
+func (app *Application) GetChangeHistory(acc []AccountModel, c *http.Client) {
 	f, err := os.OpenFile("change_history", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 
 	if err != nil {
@@ -90,14 +96,8 @@ func (app *Application) GetChangeHistory(acc []accountModel, c *http.Client) {
 	wg.Add(len(acc))
 
 	for _, account := range acc {
-		go func(account accountModel) {
+		go func(account AccountModel) {
 			url := fmt.Sprintf("https://analyticsadmin.googleapis.com/v1beta/%s:searchChangeHistoryEvents", account.Name)
-
-			type ChangeHistoryEventsRequest struct {
-				EarliestChangeTime string   `json:"earliestChangeTime"`
-				PageSize           int      `json:"pageSize"`
-				ResourceType       []string `json:"resourceType"`
-			}
 
 			postBody := &ChangeHistoryEventsRequest{
 				EarliestChangeTime: "2022-07-01T00:00:00.000Z",
@@ -126,7 +126,7 @@ func (app *Application) GetChangeHistory(acc []accountModel, c *http.Client) {
 			res, err := c.Post(url, "application/json", bytes.NewBuffer(b))
 
 			if err != nil {
-				app.logger.Fatalln(err)
+				app.logger.Fatalf("Post request failed: %s", err)
 			}
 
 			body, err := ioutil.ReadAll(res.Body)
@@ -134,7 +134,7 @@ func (app *Application) GetChangeHistory(acc []accountModel, c *http.Client) {
 			fmt.Println(string(body))
 
 			if err != nil {
-				app.logger.Fatalln(err)
+				app.logger.Fatalf("Failed to read Post body: %s", err)
 			}
 
 			var result map[string]interface{}
