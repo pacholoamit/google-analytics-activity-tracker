@@ -66,7 +66,7 @@ func (app *Application) ListAccounts(c *http.Client) []AccountModel {
 	}
 
 	var response struct {
-		Accounts []accountModel `json:"accounts"`
+		Accounts []AccountModel `json:"accounts"`
 	}
 
 	err = json.NewDecoder(res.Body).Decode(&response)
@@ -75,7 +75,7 @@ func (app *Application) ListAccounts(c *http.Client) []AccountModel {
 		panic(err)
 	}
 
-	var accountsArray []accountModel
+	var accountsArray []AccountModel
 
 	accountsList := append(accountsArray, response.Accounts...)
 
