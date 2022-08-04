@@ -87,7 +87,6 @@ func (app *Application) GetChangeHistory(acc []accountModel, c *http.Client) {
 	w := bufio.NewWriter(f)
 
 	var wg sync.WaitGroup
-
 	wg.Add(len(acc))
 
 	for _, account := range acc {
@@ -118,7 +117,11 @@ func (app *Application) GetChangeHistory(acc []accountModel, c *http.Client) {
 				},
 			}
 
-			b, _ := json.Marshal(postBody)
+			b, err := json.Marshal(postBody)
+
+			if err != nil {
+				app.logger.Fatalf("Failed to marshal body: %s", err)
+			}
 
 			res, err := c.Post(url, "application/json", bytes.NewBuffer(b))
 
