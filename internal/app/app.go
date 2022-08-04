@@ -5,6 +5,7 @@ import (
 
 	"github.com/pkg/browser"
 	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 )
 
 type Application struct {
@@ -19,7 +20,18 @@ type config interface {
 	GetRedirectURL() string
 }
 
-func New(cfg config, oauth *oauth2.Config, logger *log.Logger) *Application {
+func New(cfg config, logger *log.Logger) *Application {
+	oauth := &oauth2.Config{
+		ClientID:     cfg.GetClientId(),
+		ClientSecret: cfg.GetClientSecret(),
+		RedirectURL:  cfg.GetRedirectURL(),
+		Scopes: []string{
+			"https://www.googleapis.com/auth/business.manage",
+			"https://www.googleapis.com/auth/analytics.readonly",
+			"https://www.googleapis.com/auth/adwords",
+		},
+		Endpoint: google.Endpoint,
+	}
 	return &Application{
 		config: cfg,
 		oauth:  oauth,

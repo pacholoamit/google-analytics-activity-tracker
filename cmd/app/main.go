@@ -12,8 +12,6 @@ import (
 	"github.com/pacholoamit/google-analytics-activity-monitor/internal/app"
 	"github.com/pacholoamit/google-analytics-activity-monitor/internal/config"
 	"github.com/spf13/viper"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
 )
 
 func main() {
@@ -21,9 +19,7 @@ func main() {
 
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
-	oauth := createOAuthConfig(conf)
-
-	app := app.New(conf, oauth, logger)
+	app := app.New(conf, logger)
 
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%d", 3000),
@@ -32,8 +28,8 @@ func main() {
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 	}
-	logger.Printf("starting server on %s", srv.Addr)
 	go func() {
+		logger.Printf("starting server on %s", srv.Addr)
 		err := srv.ListenAndServe()
 		logger.Fatal(err)
 	}()
@@ -72,20 +68,4 @@ func setupConfig() *config.Config {
 
 	conf := config.New(clientId, clientSecret, redirectURL)
 	return conf
-}
-
-func createOAuthConfig(c *config.Config) *oauth2.Config {
-	oauth := &oauth2.Config{
-		ClientID:     c.GetClientId(),
-		ClientSecret: c.GetClientSecret(),
-		RedirectURL:  c.GetRedirectURL(),
-		Scopes: []string{
-			"https://www.googleapis.com/auth/business.manage",
-			"https://www.googleapis.com/auth/analytics.readonly",
-			"https://www.googleapis.com/auth/adwords",
-		},
-		Endpoint: google.Endpoint,
-	}
-
-	return oauth
 }
