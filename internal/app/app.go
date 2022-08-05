@@ -16,14 +16,13 @@ type Application struct {
 type Config struct {
 	ClientId     string
 	ClientSecret string
-	RedirectURL  string
 }
 
 func New(cfg Config, logger *log.Logger) *Application {
 	oauth := &oauth2.Config{
 		ClientID:     cfg.ClientId,
 		ClientSecret: cfg.ClientSecret,
-		RedirectURL:  cfg.RedirectURL,
+		RedirectURL:  "http://localhost:3000/success",
 		Scopes: []string{
 			"https://www.googleapis.com/auth/business.manage",
 			"https://www.googleapis.com/auth/analytics.readonly",

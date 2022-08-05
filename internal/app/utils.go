@@ -20,14 +20,12 @@ func (app *Application) newGoogleClient(code string) *http.Client {
 }
 
 func (c *Config) ValidateFlags() error {
-	if c.ClientId == "" || c.ClientSecret == "" || c.RedirectURL == "" {
+	if c.ClientId == "" || c.ClientSecret == "" {
 		return fmt.Errorf(`please provide all required flags:
 			-clientId
 				Google Client ID
 			-clientSecret
 				Google Client Secret
-			-redirectUrl
-				Google authorized redirect URL
 			`)
 	}
 	return nil

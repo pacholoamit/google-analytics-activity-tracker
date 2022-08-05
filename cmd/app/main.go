@@ -16,14 +16,12 @@ func main() {
 
 	flag.StringVar(&c.ClientId, "clientId", "", "Google Client ID")
 	flag.StringVar(&c.ClientSecret, "clientSecret", "", "Google Client Secret")
-	flag.StringVar(&c.RedirectURL, "redirectUrl", "", "Google authorized redirect URL")
+	flag.Parse()
 
 	if err := c.ValidateFlags(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-
-	flag.Parse()
 
 	l := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 

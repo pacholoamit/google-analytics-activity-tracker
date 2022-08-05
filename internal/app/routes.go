@@ -52,13 +52,16 @@ func (app *Application) successHandler(w http.ResponseWriter, r *http.Request) {
 
 	accounts := app.ListAccounts(client)
 
+	app.Logger.Println("Accounts retrieved: ", len(accounts))
 	ch := make(chan []ChangeHistoryEventModel)
 
 	for _, acc := range accounts {
 		go app.GetChangeHistory(acc, client, ch)
 	}
 
-	app.convertJSONToCSV(<-ch, []string{"ChangeTime", "UserActorEmail", "ActorType"}, "changeHistoryEvents.csv")
+	headers := []string{"ChangeTime", "UserActorEmail", "ActorType"}
+
+	app.convertJSONToCSV(<-ch, headers, "changeHistoryEvents.csv")
 
 }
 
@@ -147,7 +150,6 @@ func (app Application) convertJSONToCSV(c []ChangeHistoryEventModel, header []st
 	}
 	defer outputFile.Close()
 
-	// 4. Write the header of the CSV file and the successive rows by iterating through the JSON struct array
 	writer := csv.NewWriter(outputFile)
 	defer writer.Flush()
 
