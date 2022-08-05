@@ -46,7 +46,7 @@ func (app *Application) Routes() *httprouter.Router {
 func (app *Application) successHandler(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Query().Get("code")
 
-	app.logger.Println("Code successfully requested:", code)
+	app.Logger.Println("Code successfully requested:", code)
 
 	client := app.newGoogleClient(code)
 
@@ -113,13 +113,13 @@ func (app *Application) GetChangeHistory(acc AccountModel, c *http.Client, ch ch
 	b, err := json.Marshal(postBody)
 
 	if err != nil {
-		app.logger.Fatalf("Failed to marshal body: %s", err)
+		app.Logger.Fatalf("Failed to marshal body: %s", err)
 	}
 
 	res, err := c.Post(url, "application/json", bytes.NewBuffer(b))
 
 	if err != nil {
-		app.logger.Fatalf("Post request failed: %s", err)
+		app.Logger.Fatalf("Post request failed: %s", err)
 	}
 
 	var result struct {
@@ -127,7 +127,7 @@ func (app *Application) GetChangeHistory(acc AccountModel, c *http.Client, ch ch
 	}
 
 	if err := json.NewDecoder(res.Body).Decode(&result); err != nil {
-		app.logger.Fatalf("Failed to decode response: %s", err)
+		app.Logger.Fatalf("Failed to decode response: %s", err)
 	}
 
 	var changeHistoryEventModelArray []ChangeHistoryEventModel

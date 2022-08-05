@@ -8,24 +8,22 @@ import (
 )
 
 type Application struct {
-	config config
-	oauth  *oauth2.Config
-	logger *log.Logger
+	Config Config
+	Oauth  *oauth2.Config
+	Logger *log.Logger
 }
 
-type config interface {
-	GetClientId() string
-	GetClientSecret() string
-	GetRedirectURL() string
-	GetCode() string
-	SetCode(code string)
+type Config struct {
+	ClientId     string
+	ClientSecret string
+	RedirectURL  string
 }
 
-func New(cfg config, logger *log.Logger) *Application {
+func New(cfg Config, logger *log.Logger) *Application {
 	oauth := &oauth2.Config{
-		ClientID:     cfg.GetClientId(),
-		ClientSecret: cfg.GetClientSecret(),
-		RedirectURL:  cfg.GetRedirectURL(),
+		ClientID:     cfg.ClientId,
+		ClientSecret: cfg.ClientSecret,
+		RedirectURL:  cfg.RedirectURL,
 		Scopes: []string{
 			"https://www.googleapis.com/auth/business.manage",
 			"https://www.googleapis.com/auth/analytics.readonly",
@@ -35,8 +33,8 @@ func New(cfg config, logger *log.Logger) *Application {
 		Endpoint: google.Endpoint,
 	}
 	return &Application{
-		config: cfg,
-		oauth:  oauth,
-		logger: logger,
+		Config: cfg,
+		Oauth:  oauth,
+		Logger: logger,
 	}
 }
