@@ -14,12 +14,19 @@ import (
 
 func main() {
 	var cfg client.Config
+	var appCfg app.Config
 
 	flag.StringVar(&cfg.ClientId, "clientId", "", "Google Client ID")
 	flag.StringVar(&cfg.ClientSecret, "clientSecret", "", "Google Client Secret")
+	flag.StringVar(&appCfg.CsvFile, "csvFile", "", "CSV File")
 	flag.Parse()
 
 	if err := cfg.ValidateFlags(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	if err := appCfg.ValidateFlags(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
@@ -28,7 +35,7 @@ func main() {
 
 	c := client.New(cfg, l)
 
-	app := app.New(c, l)
+	app := app.New(c, l, &appCfg)
 
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%d", 3000),

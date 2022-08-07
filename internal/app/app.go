@@ -12,6 +12,7 @@ import (
 
 type Application struct {
 	Client GoogleClient
+	Config *Config
 	Logger *log.Logger
 }
 
@@ -22,9 +23,10 @@ type GoogleClient interface {
 	GetChangeHistory(h *http.Client, accountName string) ([]models.ChangeHistoryEvent, error)
 }
 
-func New(c GoogleClient, l *log.Logger) *Application {
+func New(c GoogleClient, l *log.Logger, cfg *Config) *Application {
 	return &Application{
 		Client: c,
+		Config: cfg,
 		Logger: l,
 	}
 }
@@ -66,7 +68,7 @@ func (app *Application) successHandler(w http.ResponseWriter, r *http.Request) {
 
 	headers := []string{"UserActorEmail", "ChangeTime", "ActorType", "Changes"}
 
-	if err := app.writeJSONToCSV(ch, headers, "marketing_foottraffik.csv"); err != nil {
+	if err := app.writeJSONToCSV(ch, headers, app.Config.CsvFile); err != nil {
 		app.Logger.Fatalln("Failed to write JSON to csv: ", err)
 	}
 

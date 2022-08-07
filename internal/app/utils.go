@@ -10,7 +10,7 @@ import (
 
 func (app Application) writeJSONToCSV(c []models.ChangeHistoryEvent, header []string, destination string) error {
 
-	outputFile, err := os.Create(destination)
+	outputFile, err := os.Create("./activity" + destination)
 	if err != nil {
 		return err
 	}
