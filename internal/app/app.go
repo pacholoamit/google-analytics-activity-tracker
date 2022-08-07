@@ -52,7 +52,12 @@ func (app *Application) successHandler(w http.ResponseWriter, r *http.Request) {
 		go app.Client.GetChangeHistory(client, account.Name, ch)
 	}
 
-	headers := []string{"ChangeTime", "UserActorEmail", "ActorType"}
+	for range accounts {
+		changes := <-ch
+		app.Logger.Println("Changes retrieved: ", len(changes))
+	}
+
+	headers := []string{"UserActorEmail", "ChangeTime", "ActorType", "Changes"}
 
 	app.writeJSONToCSV(<-ch, headers, "changeHistoryEvents.csv")
 

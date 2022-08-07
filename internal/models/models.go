@@ -14,7 +14,9 @@ type ChangeHistoryEvent struct {
 	UserActorEmail  string `json:"userActorEmail"`
 	ChangesFiltered bool   `json:"changesFiltered"`
 	Changes         []struct {
-		Resource string `json:"resource"`
-		Action   string `json:"action"`
+		Resource             string      `json:"resource"`
+		Action               string      `json:"action"`
+		ResourceBeforeChange interface{} `json:"resourceBeforeChange"`
+		ResourceAfterChange  interface{} `json:"resourceAfterChange"`
 	}
 }

@@ -69,6 +69,7 @@ func (c *Google) ListAccounts(http *http.Client) []models.Account {
 	if err != nil {
 		log.Fatalln(err)
 	}
+	defer res.Body.Close()
 
 	var response struct {
 		Accounts []models.Account `json:"accounts"`
@@ -89,7 +90,7 @@ func (c *Google) GetChangeHistory(http *http.Client, accountName string, ch chan
 	url := fmt.Sprintf("https://analyticsadmin.googleapis.com/v1beta/%s:searchChangeHistoryEvents", accountName)
 
 	postBody := &ChangeHistoryEventsRequest{
-		EarliestChangeTime: "2022-07-01T00:00:00.000Z",
+		EarliestChangeTime: "2014-07-01T00:00:00.000Z",
 		PageSize:           1000,
 		ResourceType: []string{
 			"ACCOUNT",
@@ -118,6 +119,8 @@ func (c *Google) GetChangeHistory(http *http.Client, accountName string, ch chan
 		c.logger.Fatalf("Post request failed: %s", err)
 	}
 
+	defer res.Body.Close()
+
 	var response struct {
 		ChangeHistoryEvents []models.ChangeHistoryEvent `json:"changeHistoryEvents"`
 	}
@@ -128,7 +131,8 @@ func (c *Google) GetChangeHistory(http *http.Client, accountName string, ch chan
 
 	var events []models.ChangeHistoryEvent
 
-	if len(response.ChangeHistoryEvents) > 0 {
+	if response.ChangeHistoryEvents != nil {
+		fmt.Print(response.ChangeHistoryEvents)
 		ch <- append(events, response.ChangeHistoryEvents...)
 	}
 

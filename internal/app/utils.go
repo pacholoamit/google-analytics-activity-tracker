@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/csv"
+	"encoding/json"
 	"os"
 
 	"github.com/pacholoamit/google-analytics-activity-monitor/internal/models"
@@ -25,7 +26,12 @@ func (app Application) writeJSONToCSV(c []models.ChangeHistoryEvent, header []st
 
 	for _, r := range c {
 		var csvRow []string
-		csvRow = append(csvRow, r.ChangeTime, r.UserActorEmail, r.ActorType)
+		chString, err := json.Marshal(r.Changes)
+		if err != nil {
+			panic(err)
+		}
+
+		csvRow = append(csvRow, r.UserActorEmail, r.ChangeTime, r.ActorType, string(chString))
 		if err := writer.Write(csvRow); err != nil {
 			return err
 		}
