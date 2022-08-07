@@ -86,11 +86,11 @@ func (c *Google) ListAccounts(http *http.Client) []models.Account {
 	return accounts
 }
 
-func (c *Google) GetChangeHistory(http *http.Client, accountName string, ch chan []models.ChangeHistoryEvent) {
+func (c *Google) GetChangeHistory(http *http.Client, accountName string) ([]models.ChangeHistoryEvent, error) {
 	url := fmt.Sprintf("https://analyticsadmin.googleapis.com/v1beta/%s:searchChangeHistoryEvents", accountName)
 
 	postBody := &ChangeHistoryEventsRequest{
-		EarliestChangeTime: "2014-07-01T00:00:00.000Z",
+		EarliestChangeTime: "2022-07-01T00:00:00.000Z",
 		PageSize:           1000,
 		ResourceType: []string{
 			"ACCOUNT",
@@ -110,13 +110,13 @@ func (c *Google) GetChangeHistory(http *http.Client, accountName string, ch chan
 	b, err := json.Marshal(postBody)
 
 	if err != nil {
-		c.logger.Fatalf("Failed to marshal body: %s", err)
+		return nil, fmt.Errorf("error marshalling body: %v", err)
 	}
 
 	res, err := http.Post(url, "application/json", bytes.NewBuffer(b))
 
 	if err != nil {
-		c.logger.Fatalf("Post request failed: %s", err)
+		return nil, fmt.Errorf("failed to send request: %s", err)
 	}
 
 	defer res.Body.Close()
@@ -126,14 +126,8 @@ func (c *Google) GetChangeHistory(http *http.Client, accountName string, ch chan
 	}
 
 	if err := json.NewDecoder(res.Body).Decode(&response); err != nil {
-		c.logger.Fatalf("Failed to decode response: %s", err)
+		return nil, fmt.Errorf("failed to decode response %s", err)
 	}
 
-	var events []models.ChangeHistoryEvent
-
-	if response.ChangeHistoryEvents != nil {
-		fmt.Print(response.ChangeHistoryEvents)
-		ch <- append(events, response.ChangeHistoryEvents...)
-	}
-
+	return response.ChangeHistoryEvents, nil
 }

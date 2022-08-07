@@ -16,7 +16,6 @@ func (app Application) writeJSONToCSV(c []models.ChangeHistoryEvent, header []st
 	}
 	defer outputFile.Close()
 
-	// 4. Write the header of the CSV file and the successive rows by iterating through the JSON struct array
 	writer := csv.NewWriter(outputFile)
 	defer writer.Flush()
 
@@ -28,7 +27,7 @@ func (app Application) writeJSONToCSV(c []models.ChangeHistoryEvent, header []st
 		var csvRow []string
 		chString, err := json.Marshal(r.Changes)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		csvRow = append(csvRow, r.UserActorEmail, r.ChangeTime, r.ActorType, string(chString))
