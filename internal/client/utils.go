@@ -9,8 +9,8 @@ func (c *Config) ValidateFlags() error {
 				Google Client ID
 			-clientSecret
 				Google Client Secret
-			-csvFile
-				CSV File path
+			-File
+				File output path
 			`)
 
 	}

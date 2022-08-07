@@ -18,7 +18,7 @@ func main() {
 
 	flag.StringVar(&cfg.ClientId, "clientId", "", "Google Client ID")
 	flag.StringVar(&cfg.ClientSecret, "clientSecret", "", "Google Client Secret")
-	flag.StringVar(&appCfg.CsvFile, "csvFile", "", "CSV File")
+	flag.StringVar(&appCfg.File, "file", "", "File output path")
 	flag.Parse()
 
 	if err := cfg.ValidateFlags(); err != nil {

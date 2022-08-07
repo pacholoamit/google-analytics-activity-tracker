@@ -1,6 +1,8 @@
 package app
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -22,6 +24,8 @@ type GoogleClient interface {
 	ListAccounts(h *http.Client) []models.Account
 	GetChangeHistory(h *http.Client, accountName string) ([]models.ChangeHistoryEvent, error)
 }
+
+type envelope map[string]interface{}
 
 func New(c GoogleClient, l *log.Logger, cfg *Config) *Application {
 	return &Application{
@@ -66,11 +70,21 @@ func (app *Application) successHandler(w http.ResponseWriter, r *http.Request) {
 
 	app.Logger.Print("Channel closed :", len(ch))
 
-	headers := []string{"UserActorEmail", "ChangeTime", "ActorType", "Changes"}
+	a := envelope{"activity": ch}
 
-	if err := app.writeJSONToCSV(ch, headers, app.Config.CsvFile); err != nil {
-		app.Logger.Fatalln("Failed to write JSON to csv: ", err)
+	file, err := json.MarshalIndent(a, "", " ")
+
+	if err != nil {
+		app.Logger.Fatalln("Failed to marshal json file: ", err)
 	}
+
+	_ = ioutil.WriteFile(app.Config.File, file, 0644)
+
+	// headers := []string{"UserActorEmail", "ChangeTime", "ActorType", "Changes"}
+
+	// if err := app.writeJSONToCSV(ch, headers, app.Config.CsvFile); err != nil {
+	// 	app.Logger.Fatalln("Failed to write JSON to csv: ", err)
+	// }
 
 	os.Exit(0)
 }
