@@ -46,7 +46,6 @@ func (app *Application) successHandler(w http.ResponseWriter, r *http.Request) {
 
 	ch := []models.ChangeHistoryEvent{}
 	wg := sync.WaitGroup{}
-	// mu := &sync.Mutex{}
 
 	wg.Add(len(accounts))
 	for i, account := range accounts {
@@ -62,21 +61,12 @@ func (app *Application) successHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	wg.Wait()
-	// b, err := json.Marshal(ch)
 
-	// if err != nil {
-	// 	app.Logger.Fatalln(err)
-	// }
-	// var jsonData bytes.Buffer
-
-	// json.Indent(&jsonData, b, "", "  ")
-
-	// app.Logger.Println(jsonData.String())
 	app.Logger.Print("Channel closed :", len(ch))
 
 	headers := []string{"UserActorEmail", "ChangeTime", "ActorType", "Changes"}
 
-	if err := app.writeJSONToCSV(ch, headers, "changeHistoryEvents.csv"); err != nil {
+	if err := app.writeJSONToCSV(ch, headers, "marketing_foottraffik.csv"); err != nil {
 		app.Logger.Fatalln("Failed to write JSON to csv: ", err)
 	}
 

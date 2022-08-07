@@ -23,15 +23,33 @@ func (app Application) writeJSONToCSV(c []models.ChangeHistoryEvent, header []st
 		return err
 	}
 
-	for _, r := range c {
-		var csvRow []string
-		chString, err := json.Marshal(r.Changes)
+	for _, a := range c {
+		var record []string
+
+		switch a.UserActorEmail {
+		case "":
+			record = append(record, "NOT AVAILABLE")
+		default:
+			record = append(record, a.UserActorEmail)
+		}
+
+		record = append(record, a.ChangeTime)
+
+		switch a.ActorType {
+		case "":
+			record = append(record, "NOT AVAILABLE")
+		default:
+			record = append(record, a.ActorType)
+		}
+
+		chString, err := json.Marshal(a.Changes)
+
 		if err != nil {
 			return err
 		}
+		record = append(record, string(chString))
 
-		csvRow = append(csvRow, r.UserActorEmail, r.ChangeTime, r.ActorType, string(chString))
-		if err := writer.Write(csvRow); err != nil {
+		if err := writer.Write(record); err != nil {
 			return err
 		}
 	}
