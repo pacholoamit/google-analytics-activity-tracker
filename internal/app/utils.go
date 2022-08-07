@@ -1,32 +1,34 @@
 package app
 
 import (
-	"context"
-	"fmt"
-	"net/http"
+	"encoding/csv"
+	"os"
+
+	"github.com/pacholoamit/google-analytics-activity-monitor/internal/models"
 )
 
-func (app *Application) GoogleAuthenticate() {
-	url := app.Oauth.AuthCodeURL("state") // For inclusing of refresh token
-	fmt.Printf("Visit the URL for the auth dialog: %v", url)
-}
+func (app Application) writeJSONToCSV(c []models.ChangeHistoryEvent, header []string, destination string) error {
 
-func (app *Application) newGoogleClient(code string) *http.Client {
-	token, err := app.Oauth.Exchange(context.Background(), code)
+	outputFile, err := os.Create(destination)
 	if err != nil {
-		app.Logger.Fatal(err)
+		return err
 	}
-	return app.Oauth.Client(context.Background(), token)
-}
+	defer outputFile.Close()
 
-func (c *Config) ValidateFlags() error {
-	if c.ClientId == "" || c.ClientSecret == "" {
-		return fmt.Errorf(`please provide all required flags:
-			-clientId
-				Google Client ID
-			-clientSecret
-				Google Client Secret
-			`)
+	// 4. Write the header of the CSV file and the successive rows by iterating through the JSON struct array
+	writer := csv.NewWriter(outputFile)
+	defer writer.Flush()
+
+	if err := writer.Write(header); err != nil {
+		return err
+	}
+
+	for _, r := range c {
+		var csvRow []string
+		csvRow = append(csvRow, r.ChangeTime, r.UserActorEmail, r.ActorType)
+		if err := writer.Write(csvRow); err != nil {
+			return err
+		}
 	}
 	return nil
 }

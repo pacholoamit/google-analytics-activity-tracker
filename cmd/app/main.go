@@ -9,21 +9,24 @@ import (
 	"time"
 
 	"github.com/pacholoamit/google-analytics-activity-monitor/internal/app"
+	"github.com/pacholoamit/google-analytics-activity-monitor/internal/client"
 )
 
 func main() {
-	var c app.Config
+	var cfg client.Config
 
-	flag.StringVar(&c.ClientId, "clientId", "", "Google Client ID")
-	flag.StringVar(&c.ClientSecret, "clientSecret", "", "Google Client Secret")
+	flag.StringVar(&cfg.ClientId, "clientId", "", "Google Client ID")
+	flag.StringVar(&cfg.ClientSecret, "clientSecret", "", "Google Client Secret")
 	flag.Parse()
 
-	if err := c.ValidateFlags(); err != nil {
+	if err := cfg.ValidateFlags(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
 	l := log.New(os.Stdout, "", log.Ldate|log.Ltime)
+
+	c := client.New(cfg, l)
 
 	app := app.New(c, l)
 
@@ -35,7 +38,7 @@ func main() {
 		WriteTimeout: 30 * time.Second,
 	}
 
-	app.GoogleAuthenticate()
+	app.Client.Authenticate()
 
 	app.Logger.Printf("starting server on %s", srv.Addr)
 	err := srv.ListenAndServe()
