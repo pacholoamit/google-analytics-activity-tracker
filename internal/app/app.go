@@ -1,8 +1,6 @@
 package app
 
 import (
-	"encoding/json"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -54,6 +52,7 @@ func (app *Application) successHandler(w http.ResponseWriter, r *http.Request) {
 	wg := sync.WaitGroup{}
 
 	wg.Add(len(accounts))
+
 	for i, account := range accounts {
 		go func(i int, account models.Account) {
 			hist, err := app.Client.GetChangeHistory(client, account.Name)
@@ -72,19 +71,11 @@ func (app *Application) successHandler(w http.ResponseWriter, r *http.Request) {
 
 	a := envelope{"activity": ch}
 
-	file, err := json.MarshalIndent(a, "", " ")
-
-	if err != nil {
+	if err := app.writeJSONToFile(app.Config.File, a); err != nil {
 		app.Logger.Fatalln("Failed to marshal json file: ", err)
 	}
 
-	_ = ioutil.WriteFile(app.Config.File, file, 0644)
-
-	// headers := []string{"UserActorEmail", "ChangeTime", "ActorType", "Changes"}
-
-	// if err := app.writeJSONToCSV(ch, headers, app.Config.CsvFile); err != nil {
-	// 	app.Logger.Fatalln("Failed to write JSON to csv: ", err)
-	// }
+	app.Logger.Print("File written to: ", app.Config.File)
 
 	os.Exit(0)
 }
